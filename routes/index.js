@@ -3,6 +3,7 @@ const { login } = require('../helpers/Login');
 const authMiddleware = require('../middleware/authMiddleware');
 const State = require('../models/stateModel');
 const adminMiddleware = require('../middleware/adminMiddleware');
+const City = require('../models/cityModel');
 const router = express.Router();
 
 
@@ -26,22 +27,22 @@ router.post('/login', async (req, res) => {
 router.post('/create-state', adminMiddleware, async (req, res) => {
 
     const { state_name } = req.body;
-  
+
     try {
-      const newState = new State({
-        state_name
-      });
-  
-      const state = await newState.save();
-      res.json(state);
-  
+        const newState = new State({
+            state_name
+        });
+
+        const state = await newState.save();
+        res.json(state);
+
     } catch (err) {
-      console.error(err);
-      res.status(500).send('Server Error'); 
+        console.error(err);
+        res.status(500).send('Server Error');
     }
-  
-  });
-  
+
+});
+
 
 router.get('/states', authMiddleware, async (req, res) => {
 
@@ -53,6 +54,44 @@ router.get('/states', authMiddleware, async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).send('Server Error');
+    }
+});
+
+router.post('/create-city', async (req, res) => {
+    const { city_name, state } = req.body;
+
+    try {
+        const newCity = new City({
+            city_name,
+            state
+        });
+
+        const city = await newCity.save();
+        res.json(city);
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server error');
+    }
+
+});
+
+router.get('/cities', async (req, res) => {
+    try {
+        const stateName = req.query.state_name
+        
+        const cities = await City.find().populate({
+            path: 'state',
+            match: { state_name: stateName }
+        });
+
+        const filteredCities = cities.filter(city => city.state);
+
+        res.json(filteredCities);
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server error');
     }
 });
 
