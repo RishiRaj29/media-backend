@@ -205,7 +205,7 @@ const upload = multer({
 });
 
 // POST /images
-router.post('/images', upload.single('image'), async (req, res) => {
+router.post('/image', upload.single('image'), async (req, res) => {
 
     // Get data from request 
     const { stateName, cityName, siteName, departmentName } = req.body;
