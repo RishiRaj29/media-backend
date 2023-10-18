@@ -46,7 +46,7 @@ router.post('/login', async (req, res) => {
     }
 });
 
-router.post('/create-state', adminMiddleware, async (req, res) => {
+router.post('/create-state', async (req, res) => {
 
     const { state_name } = req.body;
 
@@ -66,7 +66,7 @@ router.post('/create-state', adminMiddleware, async (req, res) => {
 });
 
 
-router.get('/states', authMiddleware, async (req, res) => {
+router.get('/states', async (req, res) => {
 
     try {
         const states = await State.find();
@@ -84,7 +84,7 @@ router.get('/states', authMiddleware, async (req, res) => {
     }
 });
 
-router.post('/create-city', authMiddleware, async (req, res) => {
+router.post('/create-city', async (req, res) => {
     const { city_name, state_name } = req.body;
 
     try {
@@ -103,7 +103,7 @@ router.post('/create-city', authMiddleware, async (req, res) => {
 
 });
 
-router.get('/cities', authMiddleware, async (req, res) => {
+router.get('/cities', async (req, res) => {
     try {
         const stateName = req.query.state_name;
 
@@ -127,7 +127,7 @@ router.get('/cities', authMiddleware, async (req, res) => {
 });
 
 
-router.post('/sitenames', authMiddleware, async (req, res) => {
+router.post('/sitenames', async (req, res) => {
 
     const { cityName, siteName } = req.body;
 
@@ -158,11 +158,11 @@ router.post('/sitenames', authMiddleware, async (req, res) => {
 });
 
 
-router.get('/sitenames', authMiddleware, async (req, res) => {
+router.get('/sitenames', async (req, res) => {
     res.json(await SiteName.find({}, { __v: false }))
 })
 
-router.post('/department', authMiddleware, async (req, res) => {
+router.post('/department', async (req, res) => {
 
     const { department_name } = req.body;
 
@@ -183,11 +183,11 @@ router.post('/department', authMiddleware, async (req, res) => {
 
 });
 
-router.get('/department', authMiddleware, async (req, res) => {
+router.get('/department', async (req, res) => {
     res.json(await Department.find({}, { __v: false }))
 })
 
-router.post('/create-folder', authMiddleware, async (req, res) => {
+router.post('/create-folder', async (req, res) => {
     try {
         const { stateName, cityName, siteName } = req.body;
         const istDate = getDate()
@@ -195,9 +195,19 @@ router.post('/create-folder', authMiddleware, async (req, res) => {
 
         const state = await State.findOne({ state_name: stateName });
 
-        const city = await City.findOne({ city_name: cityName, state: state._id });
+        let city = await City.findOne({ city_name: cityName, state: state._id });
 
-        const site = await SiteName.findOne({ site_name: siteName, city: city._id });
+        if(!city){
+            city = new City({ city_name: cityName, state: state._id });
+            await city.save()
+        }
+        
+        let site = await SiteName.findOne({ site_name: siteName, city: city._id });
+        
+        if(!site){
+            site = new SiteName({ site_name: siteName, city: city._id });
+            await site.save()
+        }
 
         const departments = await Department.find({})
 
