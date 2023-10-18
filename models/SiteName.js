@@ -1,22 +1,27 @@
-//import mongoose
-const mongoose = require("mongoose");
+// SiteNameSchema.js
 
-//designing the schema of the project 
+const mongoose = require('mongoose');
+
 const SiteNameSchema = new mongoose.Schema({
-    _id:{
-        type: mongoose.Schema.Types.ObjectId,
-        default: mongoose.Types.ObjectId,
-    },
 
-    site_name:{
-        type: String,
-        required: true,
-    },
+  _id: {
+    type: mongoose.Schema.Types.ObjectId,
+    default: () => new mongoose.Types.ObjectId() 
+  },
 
-    city:{
-        type: Schema.Types.ObjectId, ref: 'City', required: true
-    }
+  site_name: {
+    type: String,
+    required: true
+  },
+
+  city: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'City',
+    required: true
+  }
+
 });
 
-const SiteName = mongoose.model("SiteName", SiteNameSchema);
+const SiteName = mongoose.model('SiteName', SiteNameSchema);
+
 module.exports = SiteName;

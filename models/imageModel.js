@@ -4,9 +4,16 @@ const mongoose = require("mongoose");
 
 //route handler
 const imageSchema = new mongoose.Schema({
-   type: String,
-   required: true,
+   image_url: {
+      type: String,
+      required: true
+   },
+   folder_path:{
+      type:mongoose.Schema.Types.ObjectId,
+      ref:'Folder',
+      required:true
+   }
 });
 
 //export
-module.exports = mongoose.model("Like", imageSchema);
+module.exports = mongoose.model("Image", imageSchema);

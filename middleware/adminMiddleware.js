@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/UserModel');
 
-const adminMiddleware = (req, res, next) => {
+const adminMiddleware = async (req, res, next) => {
     const token = req.header('Authorization').split(' ')[1];
 
 
@@ -9,14 +9,16 @@ const adminMiddleware = (req, res, next) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
         req.user = decoded;
-        const isAdmin = User.findById(req.user)
-        if (isAdmin.role_id===1) {
+        const isAdmin = await User.findOne({_id:req.user.id}).populate('role')
+
+        
+        if (isAdmin.role.role_name==='Admin') {
             next();
         }else{
             res.status(401).json({ message: 'Invalid user' });
         }
     } catch (err) {
-        res.status(401).json({ message: 'Invalid token' });
+        res.status(401).json({ message: 'Invalid token', error: err });
     }
 }
 
