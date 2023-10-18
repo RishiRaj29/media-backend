@@ -187,6 +187,45 @@ router.get('/department', authMiddleware, async (req, res) => {
     res.json(await Department.find({}, { __v: false }))
 })
 
+router.post('/create-folder', async (req, res) => {
+    try {
+        const { stateName, cityName, siteName } = req.body;
+        const istDate = getDate()
+
+
+        const state = await State.findOne({ state_name: stateName });
+
+        const city = await City.findOne({ city_name: cityName, state: state._id });
+
+        const site = await SiteName.findOne({ site_name: siteName, city: city._id });
+
+        const departments = await Department.find({})
+
+        for (let department_ = 0; department_ < departments.length; department_++) {
+            const match = {
+                state: state._id,
+                city: city._id,
+                sitename: site._id,
+                date: istDate,
+                department: departments[department_]._id
+            };
+
+            // Search for matching folder 
+            let folder = await Folder.findOne(match);
+
+            if (!folder) {
+                folder = new Folder(match)
+                folder = await folder.save();
+            }
+        }
+        res.json({ msg: "Folder created" })
+    } catch (err) {
+        console.error(err);
+        res.status(500).send({ msg: 'Error!', error: err });
+    }
+
+})
+
 //IMAGE ROUTES
 const upload = multer({
     storage: multer.memoryStorage(),
