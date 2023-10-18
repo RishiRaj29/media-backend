@@ -187,7 +187,7 @@ router.get('/department', authMiddleware, async (req, res) => {
     res.json(await Department.find({}, { __v: false }))
 })
 
-router.post('/create-folder', async (req, res) => {
+router.post('/create-folder', authMiddleware, async (req, res) => {
     try {
         const { stateName, cityName, siteName } = req.body;
         const istDate = getDate()
