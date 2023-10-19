@@ -112,13 +112,17 @@ router.get('/cities', async (req, res) => {
             match: { state_name: stateName }
         });
 
-        const filteredCities = cities.map(city => {
+
+        const filteredCities = cities.filter(item => item.state !== null);
+        const filteredCities_ = filteredCities.map(city => {
             return {
                 "city_name": city.city_name
             }
         });
 
-        res.json(filteredCities);
+
+
+        res.json(filteredCities_);
 
     } catch (err) {
         console.error(err);
@@ -197,14 +201,14 @@ router.post('/create-folder', async (req, res) => {
 
         let city = await City.findOne({ city_name: cityName, state: state._id });
 
-        if(!city){
+        if (!city) {
             city = new City({ city_name: cityName, state: state._id });
             await city.save()
         }
-        
+
         let site = await SiteName.findOne({ site_name: siteName, city: city._id });
-        
-        if(!site){
+
+        if (!site) {
             site = new SiteName({ site_name: siteName, city: city._id });
             await site.save()
         }
@@ -370,5 +374,133 @@ router.get('/image', (req, res) => {
     });
 
 });
+
+router.get('/fetch-folders', async (req, res) => {
+    try {
+        const param = req.query.get
+
+        if (param === 'state') {
+            const result = await State.find({
+                _id: { $in: await Folder.distinct('state') }
+            }, {
+                _id: 0,
+                __v: 0
+            });
+
+            //   Folder.distinct('state') = list of distinct states i.e. state._id
+            // $in: ['_id', '__id'] = Find any from the list
+            res.json(result)
+
+        } else if (param === 'city') {
+            const state = req.query.state
+            const theState = await State.findOne({ state_name: state })
+
+            if (!theState) {
+                res.json({ msg: `State : ${state} not found` })
+                return
+            }
+
+            const result = await City.find({
+                state: theState._id,
+                _id: { $in: await Folder.distinct('city') }
+            }, {
+                _id: 0,
+                __v: 0,
+                state: 0
+            });
+            res.json(result)
+
+        } else if (param === 'date') {
+            const state = req.query.state
+            const city = req.query.city
+
+            const theState = await State.findOne({ state_name: state })
+
+            if (!theState) {
+                res.json({ msg: `State: ${state} not found` })
+                return
+            }
+
+            const theCity = await City.findOne({ city_name: city, state: theState._id })
+
+            if (!theCity) {
+                res.json({ msg: `City: ${city} not found` })
+                return
+            }
+            const result = await Folder.distinct('date', { city: theCity._id })
+
+            res.json(result)
+
+        }
+        else if (param === 'sitename') {
+            const state = req.query.state
+            const city = req.query.city
+            const date = req.query.date
+            const theState = await State.findOne({ state_name: state })
+
+            if (!theState) {
+                res.json({ msg: `State: ${state} not found` })
+                return
+            }
+
+            const theCity = await City.findOne({ city_name: city, state: theState._id })
+
+            if (!theCity) {
+                res.json({ msg: `City: ${city} not found` })
+                return
+            }
+
+            const result = await SiteName.find({
+                _id: { $in: await Folder.distinct('sitename', { city: theCity._id, date: date }) }
+            }, {
+                _id: 0,
+                city: 0,
+                __v: 0
+            })
+            res.json(result)
+        }
+        else if (param === 'department') {
+            const state = req.query.state
+            const city = req.query.city
+            const date = req.query.date
+            const sitename = req.query.sitename
+            const theState = await State.findOne({ state_name: state })
+
+            if (!theState) {
+                res.json({ msg: `State: ${state} not found` })
+                return
+            }
+
+            const theCity = await City.findOne({ city_name: city, state: theState._id })
+
+            if (!theCity) {
+                res.json({ msg: `City: ${city} not found` })
+                return
+            }
+            
+            const theSitename = await SiteName.findOne({ city: theCity._id, site_name: sitename })
+            
+            if (!theSitename) {
+                res.json({ msg: `Site: ${sitename} not found` })
+                return
+            }
+
+            const result = await Department.find({
+                _id: { $in: await Folder.distinct('department', { sitename: theSitename._id, city: theCity._id, date: date, state: theState }) }
+            }, {
+                _id:0,
+                __v:0
+            })
+            res.json(result)
+        }
+
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+})
+
+
 
 module.exports = router
